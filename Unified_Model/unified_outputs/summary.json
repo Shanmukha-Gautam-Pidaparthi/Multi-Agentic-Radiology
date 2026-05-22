@@ -1,0 +1,161 @@
+{
+  "num_samples": 10,
+  "segresnet_tumors_detected": 3,
+  "totalseg_accuracy": 40.0,
+  "totalseg_correct": 4,
+  "medsam_mean_dice": 0.6535,
+  "medsam_min_dice": 0.3025,
+  "medsam_max_dice": 0.8525,
+  "samples": [
+    {
+      "slice": "img0009-0002_s0072",
+      "gt_organ": "pancreas",
+      "segresnet": {
+        "liver_pixels": 64299,
+        "tumor_pixels": 652,
+        "tumor_percentage": 0.0622,
+        "tumor_detected": true,
+        "total_pixels": 1048576
+      },
+      "totalseg_organ": "pancreas",
+      "totalseg_match": true,
+      "medsam_dice": 0.3552,
+      "medsam_score": 0.6158
+    },
+    {
+      "slice": "img0008-0002_s0092",
+      "gt_organ": "right_kidney",
+      "segresnet": {
+        "liver_pixels": 31397,
+        "tumor_pixels": 0,
+        "tumor_percentage": 0.0,
+        "tumor_detected": false,
+        "total_pixels": 1048576
+      },
+      "totalseg_organ": "liver",
+      "totalseg_match": false,
+      "medsam_dice": 0.6198,
+      "medsam_score": 0.544
+    },
+    {
+      "slice": "img0027-0002_s0116",
+      "gt_organ": "IVC",
+      "segresnet": {
+        "liver_pixels": 107220,
+        "tumor_pixels": 0,
+        "tumor_percentage": 0.0,
+        "tumor_detected": false,
+        "total_pixels": 1048576
+      },
+      "totalseg_organ": "IVC",
+      "totalseg_match": true,
+      "medsam_dice": 0.8429,
+      "medsam_score": 0.5472
+    },
+    {
+      "slice": "img0021-0002_s0092",
+      "gt_organ": "IVC",
+      "segresnet": {
+        "liver_pixels": 29363,
+        "tumor_pixels": 0,
+        "tumor_percentage": 0.0,
+        "tumor_detected": false,
+        "total_pixels": 1048576
+      },
+      "totalseg_organ": "unknown",
+      "totalseg_match": false,
+      "medsam_dice": 0.7621,
+      "medsam_score": 0.5523
+    },
+    {
+      "slice": "img0010-0002_s0127",
+      "gt_organ": "esophagus",
+      "segresnet": {
+        "liver_pixels": 58884,
+        "tumor_pixels": 0,
+        "tumor_percentage": 0.0,
+        "tumor_detected": false,
+        "total_pixels": 1048576
+      },
+      "totalseg_organ": "unknown",
+      "totalseg_match": false,
+      "medsam_dice": 0.5613,
+      "medsam_score": 0.5524
+    },
+    {
+      "slice": "img0010-0002_s0105",
+      "gt_organ": "spleen",
+      "segresnet": {
+        "liver_pixels": 91863,
+        "tumor_pixels": 75,
+        "tumor_percentage": 0.0072,
+        "tumor_detected": true,
+        "total_pixels": 1048576
+      },
+      "totalseg_organ": "unknown",
+      "totalseg_match": false,
+      "medsam_dice": 0.6297,
+      "medsam_score": 0.6403
+    },
+    {
+      "slice": "img0009-0002_s0100",
+      "gt_organ": "liver",
+      "segresnet": {
+        "liver_pixels": 30055,
+        "tumor_pixels": 0,
+        "tumor_percentage": 0.0,
+        "tumor_detected": false,
+        "total_pixels": 1048576
+      },
+      "totalseg_organ": "liver",
+      "totalseg_match": true,
+      "medsam_dice": 0.8525,
+      "medsam_score": 0.6325
+    },
+    {
+      "slice": "img0027-0002_s0111",
+      "gt_organ": "aorta",
+      "segresnet": {
+        "liver_pixels": 113748,
+        "tumor_pixels": 569,
+        "tumor_percentage": 0.0543,
+        "tumor_detected": true,
+        "total_pixels": 1048576
+      },
+      "totalseg_organ": "aorta",
+      "totalseg_match": true,
+      "medsam_dice": 0.8143,
+      "medsam_score": 0.5391
+    },
+    {
+      "slice": "img0009-0002_s0062",
+      "gt_organ": "right_kidney",
+      "segresnet": {
+        "liver_pixels": 67861,
+        "tumor_pixels": 0,
+        "tumor_percentage": 0.0,
+        "tumor_detected": false,
+        "total_pixels": 1048576
+      },
+      "totalseg_organ": "liver",
+      "totalseg_match": false,
+      "medsam_dice": 0.795,
+      "medsam_score": 0.5777
+    },
+    {
+      "slice": "img0026-0002_s0131",
+      "gt_organ": "esophagus",
+      "segresnet": {
+        "liver_pixels": 0,
+        "tumor_pixels": 0,
+        "tumor_percentage": 0.0,
+        "tumor_detected": false,
+        "total_pixels": 1048576
+      },
+      "totalseg_organ": "unknown",
+      "totalseg_match": false,
+      "medsam_dice": 0.3025,
+      "medsam_score": 0.5526
+    }
+  ]
+}
