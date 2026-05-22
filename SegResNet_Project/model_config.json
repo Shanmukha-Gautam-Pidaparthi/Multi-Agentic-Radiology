@@ -1,0 +1,10 @@
+{
+    "MODEL_NAME": "SegResNet",
+    "IMAGE_SIZE": 128,
+    "BATCH_SIZE": 8,
+    "EPOCHS": 20,
+    "LEARNING_RATE": 0.0001,
+    "DEVICE": "cuda",
+    "NUM_CLASSES": 3,
+    "BEST_VALIDATION_DICE": 0.818548683403624
+}

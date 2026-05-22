@@ -1,0 +1,18 @@
+SEGRESNET FINAL METRICS REPORT
+==================================================
+
+DICE SCORES
+------------------------------
+Background     : 0.9961
+Liver          : 0.9282
+Tumor          : 0.7186
+
+Mean Dice : 0.8810
+
+IOU SCORES
+------------------------------
+Background     : 0.9923
+Liver          : 0.8660
+Tumor          : 0.5607
+
+Mean IoU : 0.8063
