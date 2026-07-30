@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "code",
+			"path": "."
+		},
+		{
+			"name": "SegResNet_Project",
+			"path": "../../../../Downloads/SegResNet_Project"
+		}
+	],
+	"settings": {}
+}
