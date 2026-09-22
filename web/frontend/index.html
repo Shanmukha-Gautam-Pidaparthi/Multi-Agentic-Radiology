@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive Box Prompt — Abdominal CT</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Interactive Box Prompt <span class="sub">Abdominal CT / BTCV</span></h1>
+  <div id="health" class="health">checking…</div>
+</header>
+
+<div class="banner" id="stubBanner" hidden></div>
+
+<main>
+  <section class="panel viewer">
+    <div class="panel-head">
+      <h2>1 · Draw a box</h2>
+      <span class="hint">Click and drag on the slice</span>
+    </div>
+
+    <div class="controls">
+      <label>Case
+        <select id="caseSelect"></select>
+      </label>
+      <label class="upload">Upload PNG / NIfTI
+        <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.bmp,.tif,.tiff,.nii,.nii.gz">
+      </label>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="canvas" width="512" height="512"></canvas>
+    </div>
+
+    <div class="slice-row">
+      <label>Slice <span id="sliceLabel">0 / 0</span></label>
+      <input type="range" id="sliceSlider" min="0" max="0" value="0">
+    </div>
+
+    <div class="bbox-row">
+      <span id="bboxText" class="mono">no box drawn</span>
+      <button id="clearBtn" class="ghost" type="button">Clear box</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>2 · Instruction <span class="optional">(optional)</span></h2>
+    </div>
+    <textarea id="instruction" rows="2"
+      placeholder="e.g. detect and segment a lesion in the liver"></textarea>
+
+    <details class="seam">
+      <summary>Parser test seam — use when Ollama is not running</summary>
+      <p class="note">Injects parser JSON directly, skipping the LLM call.</p>
+      <textarea id="llmOutput" rows="3"
+        placeholder='{"organ":"liver","pathology":"lesion","task":"detect+segment","parse_confidence":"high"}'></textarea>
+    </details>
+
+    <div class="actions">
+      <button id="runBtn" class="primary" type="button">Run pipeline &amp; generate report</button>
+      <span id="modeBadge" class="badge"></span>
+    </div>
+    <div id="status" class="status"></div>
+  </section>
+
+  <section class="panel report">
+    <div class="panel-head">
+      <h2>3 · Report</h2>
+      <div class="report-actions" id="reportActions" hidden>
+        <a id="dlMd" class="ghost" download>Markdown</a>
+        <a id="dlHtml" class="ghost" target="_blank" rel="noopener">Print view</a>
+        <a id="dlJson" class="ghost" target="_blank" rel="noopener">JSON</a>
+      </div>
+    </div>
+    <div id="summary" class="summary"></div>
+    <pre id="reportBody" class="report-body">Run the pipeline to generate a report.</pre>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

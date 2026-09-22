@@ -9,10 +9,24 @@ import json
 import logging
 from typing import Optional
 
-import ollama
 from pydantic import BaseModel, ValidationError, model_validator
 
 logger = logging.getLogger(__name__)
+
+try:
+    import ollama
+    OLLAMA_AVAILABLE = True
+except ImportError:  # pragma: no cover - environment-dependent
+    ollama = None
+    OLLAMA_AVAILABLE = False
+    # NOTE: stub-only mode. parse_instruction() still works when callers pass
+    # `_llm_output` (tests, and the web backend's click-driven paths, never
+    # touch Ollama). A live text parse without ollama installed falls back to
+    # `_fallback_params()`, which the router then rejects.
+    logger.warning(
+        "ollama not installed - live text parsing is disabled and will fall "
+        "back to low-confidence params. Install with: pip install ollama"
+    )
 
 
 # The 13 organs in the BTCV (Beyond the Cranial Vault) abdominal CT dataset.
@@ -180,15 +194,28 @@ def parse_instruction(
 
     if _llm_output is not None:
         raw_output = _llm_output.strip()
-    else:
-        response = ollama.chat(
-            model="llama3.1:8b",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": cleaned},
-            ],
+    elif not OLLAMA_AVAILABLE:
+        logger.warning(
+            "parse_instruction(%r) called without ollama installed - "
+            "returning fallback params (router will reject).", raw_text,
         )
-        raw_output = response["message"]["content"].strip()
+        return _fallback_params()
+    else:
+        # parse_instruction() is documented as never raising. A dead Ollama
+        # daemon is an environment failure, not a parse failure, so degrade
+        # to fallback params and let the router reject.
+        try:
+            response = ollama.chat(
+                model="llama3.1:8b",
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": cleaned},
+                ],
+            )
+            raw_output = response["message"]["content"].strip()
+        except Exception as e:
+            logger.warning("Ollama call failed for %r: %s", raw_text, e)
+            return _fallback_params()
 
     try:
         data = _extract_json(raw_output)
