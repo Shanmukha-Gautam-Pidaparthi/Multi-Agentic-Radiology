@@ -53,10 +53,21 @@ python3 test_parser.py --live
 
 ## Setup (fresh clone)
 
+Use a virtual environment. On Debian/Ubuntu, installing into the system
+Python is blocked by PEP 668 (`error: externally-managed-environment`), and
+there is no `python` on PATH — only `python3` — until a venv is activated.
+
 ```bash
+sudo apt install -y python3-venv     # Debian/Ubuntu, if the next line fails
+python3 -m venv .venv
+source .venv/bin/activate            # Windows: .venv\Scripts\activate
+python -V                            # sanity check: prints 3.x, venv is active
+
 pip install -r Final_Pipeline/requirements.txt
 pip install git+https://github.com/facebookresearch/segment-anything.git
 ```
+
+Every `python` below assumes this venv is active. Without it, use `python3`.
 
 ### Model weights
 

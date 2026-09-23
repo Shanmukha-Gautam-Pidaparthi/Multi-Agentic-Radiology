@@ -1,2 +1,6 @@
 __pycache__/
 *.py[cod]
+.venv/
+venv/
+Final_Pipeline/webapp/uploads/
+Final_Pipeline/webapp/outputs/

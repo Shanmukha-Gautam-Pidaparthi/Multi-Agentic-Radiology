@@ -7,6 +7,10 @@ Interactive 3D multi-organ tumor segmentation and diagnostic pipeline combining 
 ## Quick Start
 
 ```bash
+# From the repository root. On Debian/Ubuntu a venv is mandatory - PEP 668
+# blocks system-wide installs, and `python` does not exist until it is active.
+python3 -m venv .venv && source .venv/bin/activate
+
 pip install -r Final_Pipeline/requirements.txt
 pip install git+https://github.com/facebookresearch/segment-anything.git
 
