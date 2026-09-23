@@ -51,6 +51,14 @@ If Ollama is available and you want to run the live parser path:
 python3 test_parser.py --live
 ```
 
+Model_Links:
+
+best_medsam_btcv.pth
+https://drive.google.com/file/d/1iDuhJQJKtxfohO0mfEJ5TlXXTVbR5tVL/view?usp=sharing 
+
+medsam_vit_b.pth
+https://drive.google.com/file/d/1Gb_dIsg4I9o1f12tHKJ4jKutsOa5Zk5B/view?usp=sharing 
+
 
 
 ## Current status
