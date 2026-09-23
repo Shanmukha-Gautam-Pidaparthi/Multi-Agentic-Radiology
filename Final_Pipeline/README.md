@@ -7,8 +7,16 @@ Interactive 3D multi-organ tumor segmentation and diagnostic pipeline combining 
 ## Quick Start
 
 ```bash
-conda activate medsam_env
-cd ~/Desktop/intern/Final_Pipeline
+pip install -r Final_Pipeline/requirements.txt
+pip install git+https://github.com/facebookresearch/segment-anything.git
+
+# Download best_medsam_btcv.pth and medsam_vit_b.pth into models/
+# (Drive links in the repository root README.md)
+
+cd Final_Pipeline
+
+# Web UI: upload NIfTI, draw box, download PDF report -> localhost:5000
+python webapp/app.py
 
 # 3D Interactive Pipeline (scroll slices, draw box, 3D mesh, clinical report)
 python interactive_3d_pipeline.py --nifti <path_to_nifti_volume.nii>
@@ -20,9 +28,22 @@ python interactive_multiorgan.py --image <path_to_slice.png>
 python interactive_unified.py --image <path_to_slice.png>
 ```
 
+Model and config paths resolve relative to `Final_Pipeline/`, so these run from
+any working directory. `webapp/app.py` exposes `GET /health` listing which
+models loaded and which files are missing.
+
 ---
 
 ## Folder Structure
+
+> **Note:** the tree below is the intended layout. These entries are **not
+> committed to this repository** and must be obtained separately:
+> `models/best_medsam_btcv.pth` and `models/medsam_vit_b.pth` (Drive links in
+> the root README), `config/config.py`, `sample_outputs/`,
+> `pipeline_architecture.png`, `class_mapping_schema.png`,
+> `step0_download_micro.py`, `step3_train.py`.
+> Nothing under `Final_Pipeline/` imports `config.py`, so the three
+> interactive scripts and the web UI run without it.
 
 ```
 Final_Pipeline/
@@ -38,12 +59,13 @@ Final_Pipeline/
 ├── models/                            ← All trained model weights
 │   ├── best_multiorgan.pth            ← 3D Multi-organ Tumor UNet (19 MB)
 │   ├── best_segresnet_model.pth       ← 2D SegResNet liver/tumor (6.1 MB)
-│   ├── best_medsam_btcv.pth           ← MedSAM fine-tuned on BTCV (388 MB)
-│   └── medsam_vit_b.pth              ← MedSAM pre-trained ViT-B (358 MB)
+│   ├── best_medsam_btcv.pth           ← MedSAM fine-tuned on BTCV (388 MB) [DOWNLOAD]
+│   └── medsam_vit_b.pth              ← MedSAM pre-trained ViT-B (358 MB) [DOWNLOAD]
 │
 ├── config/
-│   ├── config.py                      ← Class mappings & hyperparameters
 │   └── model_config.json              ← SegResNet architecture config
+│
+├── requirements.txt                   ← Python dependencies
 │
 ├── sample_outputs/
 │   ├── 3d_img0008-0002.png            ← 3D mesh render sample

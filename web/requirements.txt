@@ -1,0 +1,13 @@
+# Web UI dependencies (backend + pipeline imports).
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+pydantic>=2.6
+numpy>=1.24
+pillow>=10.0
+
+# Optional, unlocks extra paths:
+#   nibabel  -> upload .nii/.nii.gz volumes instead of PNG slices
+#   ollama   -> live text-instruction parsing (needs a running Ollama daemon)
+# nibabel>=5.2
+# ollama>=0.3

@@ -1,0 +1,108 @@
+:root {
+  --bg: #0d1117; --panel: #161b22; --border: #30363d;
+  --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+  --ok: #3fb950; --warn: #d29922; --err: #f85149;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+header {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 1rem; flex-wrap: wrap;
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+}
+h1 { font-size: 1.05rem; margin: 0; font-weight: 600; }
+h2 { font-size: .92rem; margin: 0; font-weight: 600; }
+.sub { color: var(--muted); font-weight: 400; margin-left: .5rem; }
+.optional { color: var(--muted); font-weight: 400; font-size: .8rem; }
+.health { font-size: .78rem; color: var(--muted); font-family: ui-monospace, monospace; }
+
+.banner {
+  margin: 0; padding: .6rem 1.25rem; font-size: .8rem;
+  background: #3d2c00; color: #f0c674; border-bottom: 1px solid #5c4400;
+}
+
+main {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem; padding: 1rem 1.25rem; align-items: start;
+}
+.viewer { grid-row: span 2; }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; } .viewer { grid-row: auto; } }
+
+.panel {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem; min-width: 0;
+}
+.panel-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: .75rem; margin-bottom: .75rem; flex-wrap: wrap;
+}
+.hint { color: var(--muted); font-size: .78rem; }
+
+.controls { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: .75rem; }
+label { font-size: .78rem; color: var(--muted); display: flex; flex-direction: column; gap: .3rem; }
+select, input[type=file], textarea {
+  background: #0d1117; color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: .4rem .5rem; font: inherit; max-width: 100%;
+}
+textarea { width: 100%; resize: vertical; font-family: ui-monospace, monospace; font-size: .8rem; }
+
+.canvas-wrap {
+  background: #000; border: 1px solid var(--border); border-radius: 6px;
+  overflow: hidden; line-height: 0;
+}
+canvas { width: 100%; height: auto; display: block; cursor: crosshair; touch-action: none; }
+
+.slice-row { margin-top: .75rem; }
+.slice-row input[type=range] { width: 100%; accent-color: var(--accent); }
+.bbox-row {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: .5rem; margin-top: .5rem;
+}
+.mono { font-family: ui-monospace, monospace; font-size: .76rem; color: var(--muted); }
+
+.seam { margin: .75rem 0; }
+.seam summary { cursor: pointer; font-size: .78rem; color: var(--muted); }
+.note { font-size: .74rem; color: var(--muted); margin: .4rem 0; }
+
+.actions { display: flex; align-items: center; gap: .75rem; margin-top: .75rem; flex-wrap: wrap; }
+button, .ghost {
+  font: inherit; border-radius: 6px; padding: .45rem .8rem;
+  cursor: pointer; border: 1px solid var(--border);
+  background: #21262d; color: var(--text); text-decoration: none;
+}
+button:hover, .ghost:hover { border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.primary { background: var(--accent); border-color: var(--accent); color: #04121f; font-weight: 600; }
+.ghost { font-size: .78rem; padding: .3rem .6rem; }
+
+.badge {
+  font-family: ui-monospace, monospace; font-size: .74rem;
+  color: var(--muted); border: 1px solid var(--border);
+  border-radius: 999px; padding: .15rem .6rem;
+}
+.badge:empty { display: none; }
+
+.status { margin-top: .6rem; font-size: .8rem; min-height: 1.2em; }
+.status.err { color: var(--err); }
+.status.ok { color: var(--ok); }
+.status.busy { color: var(--warn); }
+
+.report-actions { display: flex; gap: .4rem; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: .5rem; }
+.summary:empty { display: none; }
+.stat {
+  background: #0d1117; border: 1px solid var(--border);
+  border-radius: 6px; padding: .5rem .6rem;
+}
+.stat .k { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.stat .v { font-size: .95rem; font-family: ui-monospace, monospace; margin-top: .15rem; }
+.report-body {
+  margin: .75rem 0 0; padding: .75rem; max-height: 26rem; overflow: auto;
+  background: #0d1117; border: 1px solid var(--border); border-radius: 6px;
+  font-family: ui-monospace, monospace; font-size: .76rem;
+  white-space: pre-wrap; word-wrap: break-word; color: var(--text);
+}

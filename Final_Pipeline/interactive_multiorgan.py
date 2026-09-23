@@ -21,15 +21,22 @@ import torch.nn.functional as F
 import numpy as np
 import nibabel as nib
 import matplotlib.pyplot as plt
+
+# Resolve model/config paths relative to this file, so the scripts work from
+# any working directory instead of only from the original dev checkout.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_MODELS = os.path.join(_HERE, "models")
+_CONFIG = os.path.join(_HERE, "config")
+
 from matplotlib.patches import Rectangle
 from datetime import datetime
 from PIL import Image
 from segment_anything.build_sam import _build_sam
 
 # ── Config ──
-MULTIORGAN_MODEL = "weights/best_multiorgan.pth"
-SEGRESNET_MODEL  = "SegResNet_Project/best_segresnet_model.pth"
-SEGRESNET_CFG    = "SegResNet_Project/model_config.json"
+MULTIORGAN_MODEL = os.path.join(_MODELS, "best_multiorgan.pth")
+SEGRESNET_MODEL  = os.path.join(_MODELS, "best_segresnet_model.pth")
+SEGRESNET_CFG    = os.path.join(_CONFIG, "model_config.json")
 
 NUM_CLASSES = 11
 CLASS_NAMES = {
@@ -73,7 +80,7 @@ TOTALSEG_TO_BTCV = {
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--image", default=None, help="Path to a 2D PNG slice")
-    p.add_argument("--checkpoint", default="best_medsam_btcv.pth")
+    p.add_argument("--checkpoint", default=os.path.join(_MODELS, "best_medsam_btcv.pth"))
     p.add_argument("--save-dir", default="unified_multiorgan_outputs")
     p.add_argument("--device", default="cpu")
     return p.parse_args()
