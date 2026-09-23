@@ -20,11 +20,28 @@ from fpdf import FPDF
 
 # Add parent for imports
 PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BP = os.path.join(os.path.dirname(PARENT), "Box_Prompt")
-sys.path.insert(0, BP)
-from segment_anything.build_sam import _build_sam
+REPO_ROOT = os.path.dirname(PARENT)
+# Legacy dev layout: a sibling Box_Prompt/ checkout holding segment_anything.
+# Kept on sys.path so existing working copies still resolve, but the package
+# is normally pip-installed now (see requirements.txt).
+BP = os.path.join(REPO_ROOT, "Box_Prompt")
+if os.path.isdir(BP):
+    sys.path.insert(0, BP)
 
-app = Flask(__name__)
+try:
+    from segment_anything.build_sam import _build_sam
+    SAM_IMPORT_ERROR = None
+except ImportError as e:
+    _build_sam = None
+    SAM_IMPORT_ERROR = str(e)
+    print(f"  WARNING: segment_anything not importable ({e}).\n"
+          f"           MedSAM box-prompt segmentation will be unavailable.\n"
+          f"           Install: pip install "
+          f"git+https://github.com/facebookresearch/segment-anything.git")
+
+# templates/ is a sibling of webapp/, not a child, so point Flask at it
+# explicitly - the default (webapp/templates) does not exist.
+app = Flask(__name__, template_folder=os.path.join(PARENT, "templates"))
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
@@ -55,35 +72,89 @@ models = {}
 def get_device():
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def load_models():
-    dev = get_device()
-    if "unet" not in models:
-        print("  Loading 3D UNet...")
-        from monai.networks.nets import UNet
-        m = UNet(spatial_dims=3, in_channels=1, out_channels=NUM_CLS,
-                 channels=(32,64,128,256), strides=(2,2,2), num_res_units=2)
-        st = torch.load(os.path.join(MODEL_DIR, "best_multiorgan.pth"), map_location="cpu", weights_only=False)
-        m.load_state_dict(st); m.to(dev).eval()
-        models["unet"] = m
+# Weight files are distributed out-of-band (see the Drive links in the repo
+# README) because two of them exceed GitHub's file size limit. A missing file
+# must not take down the whole app: each model loads independently and records
+# why it is unavailable, so the UI can report the gap instead of 500-ing.
+MODEL_FILES = {
+    "unet":      "best_multiorgan.pth",
+    "segresnet": "best_segresnet_model.pth",
+    "sam":       "best_medsam_btcv.pth",
+}
+load_errors = {}
 
-    if "segresnet" not in models:
-        print("  Loading SegResNet...")
-        from monai.networks.nets import SegResNet
-        cfg = json.load(open(os.path.join(CONFIG_DIR, "model_config.json")))
-        m = SegResNet(spatial_dims=2, in_channels=1, out_channels=cfg["NUM_CLASSES"],
-                      init_filters=16, blocks_down=(1,2,2,4), blocks_up=(1,1,1), dropout_prob=0.2)
-        m.load_state_dict(torch.load(os.path.join(MODEL_DIR, "best_segresnet_model.pth"),
-                          map_location="cpu", weights_only=False))
-        m.to(dev).eval()
-        models["segresnet"] = m; models["seg_cfg"] = cfg
+
+def model_status():
+    """Per-model availability, for /health and the UI banner."""
+    out = {}
+    for key, fname in MODEL_FILES.items():
+        path = os.path.join(MODEL_DIR, fname)
+        out[key] = {
+            "file": fname,
+            "present": os.path.isfile(path),
+            "loaded": key in models,
+            "error": load_errors.get(key),
+        }
+    return out
+
+
+def load_models():
+    """Load whatever is available. Never raises - inspect load_errors after."""
+    dev = get_device()
+
+    def _missing(key):
+        path = os.path.join(MODEL_DIR, MODEL_FILES[key])
+        if os.path.isfile(path):
+            return None
+        msg = (f"{MODEL_FILES[key]} not found in {MODEL_DIR}. "
+               f"Download it from the Drive link in the repo README.")
+        print(f"  WARNING: {msg}")
+        load_errors[key] = msg
+        return msg
+
+    if "unet" not in models and not _missing("unet"):
+        try:
+            print("  Loading 3D UNet...")
+            from monai.networks.nets import UNet
+            m = UNet(spatial_dims=3, in_channels=1, out_channels=NUM_CLS,
+                     channels=(32,64,128,256), strides=(2,2,2), num_res_units=2)
+            st = torch.load(os.path.join(MODEL_DIR, MODEL_FILES["unet"]),
+                            map_location="cpu", weights_only=False)
+            m.load_state_dict(st); m.to(dev).eval()
+            models["unet"] = m; load_errors.pop("unet", None)
+        except Exception as e:
+            print(f"  ERROR loading 3D UNet: {e}"); load_errors["unet"] = str(e)
+
+    if "segresnet" not in models and not _missing("segresnet"):
+        try:
+            print("  Loading SegResNet...")
+            from monai.networks.nets import SegResNet
+            cfg = json.load(open(os.path.join(CONFIG_DIR, "model_config.json")))
+            m = SegResNet(spatial_dims=2, in_channels=1, out_channels=cfg["NUM_CLASSES"],
+                          init_filters=16, blocks_down=(1,2,2,4), blocks_up=(1,1,1), dropout_prob=0.2)
+            m.load_state_dict(torch.load(os.path.join(MODEL_DIR, MODEL_FILES["segresnet"]),
+                              map_location="cpu", weights_only=False))
+            m.to(dev).eval()
+            models["segresnet"] = m; models["seg_cfg"] = cfg
+            load_errors.pop("segresnet", None)
+        except Exception as e:
+            print(f"  ERROR loading SegResNet: {e}"); load_errors["segresnet"] = str(e)
 
     if "sam" not in models:
-        print("  Loading MedSAM...")
-        sam = _build_sam(encoder_embed_dim=768, encoder_depth=12, encoder_num_heads=12,
-                         encoder_global_attn_indexes=[2,5,8,11], checkpoint=None)
-        ck = torch.load(os.path.join(MODEL_DIR, "best_medsam_btcv.pth"), map_location="cpu", weights_only=False)
-        sam.load_state_dict(ck.get("model_state_dict", ck)); sam.to(dev).eval()
-        models["sam"] = sam
+        if _build_sam is None:
+            load_errors["sam"] = f"segment_anything not importable: {SAM_IMPORT_ERROR}"
+        elif not _missing("sam"):
+            try:
+                print("  Loading MedSAM...")
+                sam = _build_sam(encoder_embed_dim=768, encoder_depth=12, encoder_num_heads=12,
+                                 encoder_global_attn_indexes=[2,5,8,11], checkpoint=None)
+                ck = torch.load(os.path.join(MODEL_DIR, MODEL_FILES["sam"]),
+                                map_location="cpu", weights_only=False)
+                sam.load_state_dict(ck.get("model_state_dict", ck)); sam.to(dev).eval()
+                models["sam"] = sam; load_errors.pop("sam", None)
+            except Exception as e:
+                print(f"  ERROR loading MedSAM: {e}"); load_errors["sam"] = str(e)
+
     return dev
 
 # ── Pipeline Functions ──
@@ -123,13 +194,41 @@ def run_medsam(rgb, box, dev):
     mask = (np.array(Image.fromarray(p*255).resize((iw,ih), Image.NEAREST)) > 127).astype(np.uint8)
     return mask, iou.squeeze(0)[bi].item()
 
+# Where precomputed TotalSegmentator masks may live. The legacy Box_Prompt/
+# location is kept first for existing working copies; the repo-relative paths
+# are what a fresh clone uses after running
+# Unified_Model/step1_precompute_totalseg.py. Override with MEDAI_TOTALSEG_DIR.
+TOTALSEG_SEARCH_DIRS = [d for d in [
+    os.environ.get("MEDAI_TOTALSEG_DIR"),
+    os.path.join(BP, "totalseg_cache"),
+    os.path.join(BP, "totalseg_test_output"),
+    os.path.join(PARENT, "totalseg_cache"),
+    os.path.join(REPO_ROOT, "totalseg_cache"),
+    os.path.join(REPO_ROOT, "totalseg_test_output"),
+] if d]
+
+
 def load_totalseg_masks(case_name):
-    """Load precomputed TotalSegmentator organ masks."""
+    """Load precomputed TotalSegmentator organ masks.
+
+    Returns {} when no cache is found - organ classification is then reported
+    as unavailable rather than silently wrong.
+    """
     masks = {}
-    ts_dir = os.path.join(BP, "totalseg_cache", case_name)
-    if not os.path.isdir(ts_dir):
-        ts_dir = os.path.join(BP, "totalseg_test_output")
-    if not os.path.isdir(ts_dir):
+    ts_dir = None
+    for base in TOTALSEG_SEARCH_DIRS:
+        for cand in (os.path.join(base, case_name), base):
+            if os.path.isdir(cand) and any(
+                f.endswith(".nii.gz") for f in os.listdir(cand)
+            ):
+                ts_dir = cand
+                break
+        if ts_dir:
+            break
+    if ts_dir is None:
+        print(f"  WARNING: no TotalSegmentator cache for {case_name!r}. Searched: "
+              f"{TOTALSEG_SEARCH_DIRS}. Organ classification will be unavailable - "
+              f"generate it with Unified_Model/step1_precompute_totalseg.py")
         return masks
     for ts_name, btcv_id in TS2BTCV.items():
         p = os.path.join(ts_dir, f"{ts_name}.nii.gz")
@@ -206,15 +305,21 @@ def save_panel_image(vol, pred_3d, z, session_dir, box=None, medsam_mask=None):
     axes[1].set_title("UNet: " + (", ".join(found[:3]) or "bg"),
                        color="#FF5252" if has_t else "#4CAF50", fontsize=11, fontweight="bold")
 
-    # Panel 3: SegResNet
-    seg_pred = run_segresnet(ct, get_device())
-    seg_ov = np.stack([ct]*3, axis=-1).astype(np.float32)
-    seg_ov[seg_pred==1] = [255,200,50]; seg_ov[seg_pred==2] = [255,30,30]
-    axes[2].imshow(np.clip(seg_ov,0,255).astype(np.uint8))
+    # Panel 3: SegResNet. Missing weights degrade this panel only - panel 4
+    # (MedSAM) below must still render, so do not bail out of the figure.
     axes[2].axis("off"); axes[2].set_facecolor("#0a0a0a")
-    t_px = int((seg_pred==2).sum())
-    axes[2].set_title(f"SegResNet: {'TUMOR' if t_px>0 else 'Clean'} ({t_px}px)",
-                       color="#FF5252" if t_px>0 else "#4CAF50", fontsize=11, fontweight="bold")
+    if "segresnet" not in models:
+        axes[2].imshow(ct, cmap="gray")
+        axes[2].set_title("SegResNet unavailable", color="#FF5252",
+                          fontsize=11, fontweight="bold")
+    else:
+        seg_pred = run_segresnet(ct, get_device())
+        seg_ov = np.stack([ct]*3, axis=-1).astype(np.float32)
+        seg_ov[seg_pred==1] = [255,200,50]; seg_ov[seg_pred==2] = [255,30,30]
+        axes[2].imshow(np.clip(seg_ov,0,255).astype(np.uint8))
+        t_px = int((seg_pred==2).sum())
+        axes[2].set_title(f"SegResNet: {'TUMOR' if t_px>0 else 'Clean'} ({t_px}px)",
+                           color="#FF5252" if t_px>0 else "#4CAF50", fontsize=11, fontweight="bold")
 
     # Panel 4: MedSAM (if box provided)
     if medsam_mask is not None and len(axes) > 3:
@@ -323,6 +428,18 @@ sessions = {}
 def index():
     return render_template("index.html")
 
+@app.route("/health")
+def health():
+    """Component availability - check this first when something is missing."""
+    return jsonify({
+        "models": model_status(),
+        "model_dir": MODEL_DIR,
+        "segment_anything": SAM_IMPORT_ERROR or "ok",
+        "totalseg_cache": TOTALSEG_SEARCH_DIRS,
+        "device": str(get_device()),
+    })
+
+
 @app.route("/upload", methods=["POST"])
 def upload():
     if "file" not in request.files:
@@ -361,6 +478,12 @@ def run_pipeline():
         return jsonify({"error": "Session not found"}), 404
 
     s = sessions[sid]; dev = load_models()
+    if "unet" not in models:
+        return jsonify({
+            "error": "3D UNet unavailable - cannot run the pipeline.",
+            "detail": load_errors.get("unet"),
+            "models": model_status(),
+        }), 503
     print(f"  Running 3D UNet for {s['case']}...")
     pred_3d = run_3d_unet(s["vol"], dev)
     volumes = calc_volumes(pred_3d, s["pixdim"])
@@ -393,7 +516,10 @@ def get_slice_route():
     organ_name = "unknown"
     organ_results = []
 
-    if box and len(box) == 4:
+    if box and len(box) == 4 and "sam" not in models:
+        print(f"  Slice {z}: MedSAM unavailable ({load_errors.get('sam')}) - "
+              f"skipping box-prompt segmentation.")
+    elif box and len(box) == 4:
         ct = get_slice_img(s["vol"], z)
         rgb = np.stack([ct]*3, axis=-1)
         medsam_mask, medsam_score = run_medsam(rgb, box, dev)

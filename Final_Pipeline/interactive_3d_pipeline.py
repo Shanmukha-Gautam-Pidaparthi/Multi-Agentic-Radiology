@@ -16,6 +16,13 @@ from matplotlib.widgets import Slider
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from skimage.measure import marching_cubes
 from scipy.ndimage import binary_dilation
+
+# Resolve model/config paths relative to this file, so the scripts work from
+# any working directory instead of only from the original dev checkout.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_MODELS = os.path.join(_HERE, "models")
+_CONFIG = os.path.join(_HERE, "config")
+
 from PIL import Image
 from datetime import datetime
 from segment_anything.build_sam import _build_sam
@@ -35,7 +42,7 @@ TS2B={"spleen":1,"kidney_right":2,"kidney_left":3,"gallbladder":4,"esophagus":5,
 def parse_args():
     p=argparse.ArgumentParser()
     p.add_argument("--nifti",required=True); p.add_argument("--device",default="cpu")
-    p.add_argument("--checkpoint",default="best_medsam_btcv.pth")
+    p.add_argument("--checkpoint",default=os.path.join(_MODELS,"best_medsam_btcv.pth"))
     p.add_argument("--save-dir",default="pipeline_3d_outputs"); return p.parse_args()
 
 def load_unet(path,dev):
@@ -190,8 +197,9 @@ def main():
     print(f"  Volume: {vol.shape} | Spacing: {pixdim[:3]}")
 
     print("\n  Loading models...")
-    unet=load_unet("weights/best_multiorgan.pth",dev)
-    segresnet,seg_cfg=load_segresnet("SegResNet_Project/best_segresnet_model.pth","SegResNet_Project/model_config.json",dev)
+    unet=load_unet(os.path.join(_MODELS,"best_multiorgan.pth"),dev)
+    segresnet,seg_cfg=load_segresnet(os.path.join(_MODELS,"best_segresnet_model.pth"),
+                                   os.path.join(_CONFIG,"model_config.json"),dev)
     sam=load_medsam(args.checkpoint,dev)
     ts_masks=load_ts(case); print(f"    TotalSeg: {len(ts_masks)} organs")
 

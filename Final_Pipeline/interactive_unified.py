@@ -22,6 +22,13 @@ import torch.nn.functional as F
 import numpy as np
 import nibabel as nib
 import matplotlib.pyplot as plt
+
+# Resolve model/config paths relative to this file, so the scripts work from
+# any working directory instead of only from the original dev checkout.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_MODELS = os.path.join(_HERE, "models")
+_CONFIG = os.path.join(_HERE, "config")
+
 from matplotlib.patches import Rectangle
 from datetime import datetime
 from PIL import Image
@@ -30,8 +37,8 @@ from segment_anything.build_sam import _build_sam
 # =============================================================================
 # CONFIG
 # =============================================================================
-SEGRESNET_MODEL = "SegResNet_Project/best_segresnet_model.pth"
-SEGRESNET_CFG   = "SegResNet_Project/model_config.json"
+SEGRESNET_MODEL = os.path.join(_MODELS, "best_segresnet_model.pth")
+SEGRESNET_CFG   = os.path.join(_CONFIG, "model_config.json")
 
 ORGAN_NAMES = {
     1: "spleen", 2: "right_kidney", 3: "left_kidney", 4: "gallbladder",
@@ -50,7 +57,7 @@ TOTALSEG_TO_BTCV = {
 
 def parse_args():
     p = argparse.ArgumentParser(description="Interactive Unified 3-Model Pipeline")
-    p.add_argument("--checkpoint", default="best_medsam_btcv.pth")
+    p.add_argument("--checkpoint", default=os.path.join(_MODELS, "best_medsam_btcv.pth"))
     p.add_argument("--image", default=None)
     p.add_argument("--save-dir", default="unified_interactive_outputs")
     p.add_argument("--device", default="cpu")
