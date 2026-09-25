@@ -1,15 +1,25 @@
 # Final_Pipeline runtime dependencies.
 #
-# Install:
+# ---------------------------------------------------------------------------
+# CPU-ONLY MACHINES: install torch FIRST, from the CPU index, or pip pulls
+# ~3 GB of NVIDIA CUDA wheels you cannot use.
+#
+#   python3 -m venv .venv && source .venv/bin/activate
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 #   pip install -r Final_Pipeline/requirements.txt
 #   pip install git+https://github.com/facebookresearch/segment-anything.git
+#
+# Check with `nvidia-smi`: no output / command not found means no usable GPU.
+# With a working NVIDIA driver, skip the CPU index line and just install this
+# file - the default wheels bring CUDA and inference is far faster.
+# ---------------------------------------------------------------------------
 #
 # segment-anything has no PyPI release, so it is installed from git separately
 # rather than listed here (a VCS URL in a requirements file breaks `pip
 # download` and some mirrors).
 
 torch>=2.0
-torchvision>=0.15
+torchvision>=0.15         # not imported directly; required by segment-anything
 monai>=1.3
 nibabel>=5.1
 numpy>=1.24
@@ -21,6 +31,10 @@ matplotlib>=3.7
 # Web UI
 flask>=3.0
 fpdf2>=2.7                # NOT the abandoned `fpdf` 1.x - the API differs
+
+# Fetches the two model checkpoints from Google Drive. Plain wget/curl gets an
+# HTML interstitial instead of the file, because both are over 100 MB.
+gdown>=5.1
 
 # Optional: generate TotalSegmentator organ masks instead of using a
 # precomputed cache. Large download on first run.

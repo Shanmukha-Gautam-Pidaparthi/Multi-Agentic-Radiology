@@ -63,9 +63,18 @@ python3 -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\activate
 python -V                            # sanity check: prints 3.x, venv is active
 
+# CPU-only machine? Install torch from the CPU index FIRST, or pip pulls
+# ~3 GB of NVIDIA CUDA wheels. Check with: nvidia-smi
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
 pip install -r Final_Pipeline/requirements.txt
 pip install git+https://github.com/facebookresearch/segment-anything.git
 ```
+
+With a working NVIDIA driver, skip the CPU index line — the default wheels
+bring CUDA and inference is far faster. Without a GPU the app still runs;
+`get_device()` falls back to CPU, but a 3D sliding-window pass takes minutes
+per case.
 
 Every `python` below assumes this venv is active. Without it, use `python3`.
 
@@ -80,6 +89,21 @@ must be downloaded into `Final_Pipeline/models/` by hand.
 | `best_segresnet_model.pth` | 6.1 MB | in repo |
 | `best_medsam_btcv.pth` | 388 MB | [Drive](https://drive.google.com/file/d/1iDuhJQJKtxfohO0mfEJ5TlXXTVbR5tVL/view?usp=sharing) |
 | `medsam_vit_b.pth` | 358 MB | [Drive](https://drive.google.com/file/d/1Gb_dIsg4I9o1f12tHKJ4jKutsOa5Zk5B/view?usp=sharing) |
+
+Only `best_medsam_btcv.pth` is required — `medsam_vit_b.pth` is referenced
+nowhere in the code and can be skipped.
+
+```bash
+cd Final_Pipeline/models
+gdown 1iDuhJQJKtxfohO0mfEJ5TlXXTVbR5tVL -O best_medsam_btcv.pth
+
+ls -lh best_medsam_btcv.pth    # expect ~388M
+file best_medsam_btcv.pth      # expect "Zip archive data", NOT "HTML document"
+```
+
+That `file` check matters: a blocked download silently writes a small HTML
+page under the right filename, which only surfaces later as a confusing error
+inside `torch.load`.
 
 Both Drive files must be shared as **Anyone with the link**, or collaborators
 get a 403.
