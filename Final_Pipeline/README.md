@@ -11,10 +11,14 @@ Interactive 3D multi-organ tumor segmentation and diagnostic pipeline combining 
 # blocks system-wide installs, and `python` does not exist until it is active.
 python3 -m venv .venv && source .venv/bin/activate
 
+# CPU-only machine? Install torch from the CPU index first (check: nvidia-smi)
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
 pip install -r Final_Pipeline/requirements.txt
 pip install git+https://github.com/facebookresearch/segment-anything.git
 
-# Download best_medsam_btcv.pth and medsam_vit_b.pth into models/
+# Download best_medsam_btcv.pth into models/ (gdown; see root README).
+# medsam_vit_b.pth is NOT required - no code references it.
 # (Drive links in the repository root README.md)
 
 cd Final_Pipeline
